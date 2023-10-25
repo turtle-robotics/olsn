@@ -2,13 +2,13 @@
 
 import multiprocessing
 from pyomyo import Myo, emg_mode
-
-
 import csv
+
 
 worker_q = multiprocessing.Queue()
 csv_q = multiprocessing.Queue()
 graph_q = multiprocessing.Queue()
+
 
 def worker(q):
     m = Myo(mode=emg_mode.FILTERED)
@@ -47,7 +47,7 @@ def process_to_graph(q):
             # do something
 
 if __name__ == '__main__':
-    csvfile = open('test.csv', 'w+', newline='')
+    csvfile = open('myo_emg_data.csv', 'w+', newline='')
 
     p = multiprocessing.Process(target=worker, args=(worker_q,))
     p.start()
