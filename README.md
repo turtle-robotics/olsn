@@ -121,16 +121,3 @@ We appreciate your contributions, whether it's in the form of code, documentatio
 This project is licensed under the [MIT License](LICENSE), which means that you are free to use, modify, and distribute the code as long as you provide proper attribution and include the original license in your distribution. Please review the full license for more details.
 
 Thank you for your interest in Project OLSN, and we look forward to your contributions and support in helping Kaeden regain their independence with the specialized EMG hand. If you have any questions or need assistance, please don't hesitate to reach out.
-```
-
-3. **Save the File**: After formatting your README content, save the `README.md` file in your project directory.
-
-4. **Push to GitHub**: Commit the changes to your Git repository and push them to your GitHub repository using Git commands. For example:
-
-```shell
-git add README.md
-git commit -m "Add README.md"
-git push origin main
-```
-
-Your README file should now be available on your GitHub repository, and it will be displayed with the formatting similar to the example provided. You can view it by visiting your GitHub repository's main page.
