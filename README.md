@@ -22,11 +22,6 @@ Welcome to the Project OLSN repository! This project is dedicated to the develop
   - Role: Hardware Design Team
   - Year: Junior
 
-- **Zachary Bucknor-Smartt**
-  - Major: Mechanical Engineering
-  - Role: Hardware Design Team
-  - Year: Senior
-
 - **Ian Farrar**
   - Major: Electrical Engineering
   - Role: Electronics & Software Team
