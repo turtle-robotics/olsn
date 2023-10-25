@@ -1,6 +1,6 @@
 # Project OLSN - EMG Hand for Kaeden OLSN
 
-Welcome to the Project OLSN repository! This project is dedicated to the development of an Electromyography (EMG) hand designed specifically for Kaeden OLSN. In this README, we will provide you with an overview of the project, its goals, features, and how to get started with it.
+Welcome to the Project OLSN repository! This project is dedicated to the development of an Electromyography (EMG) hand designed specifically for Kaeden Olson, a young boy born without his right hand. In this README, we will provide you with an overview of the project, its goals, features, and how to get started with it.
 
 ## Table of Contents
 
@@ -54,12 +54,11 @@ Welcome to the Project OLSN repository! This project is dedicated to the develop
 
 ## Project Overview
 
-Kaeden OLSN is the inspiration behind Project OLSN, and this project aims to create a specialized EMG hand that will greatly improve Kaeden's quality of life. Electromyography (EMG) technology allows for the measurement of electrical activity in the muscles, which can be harnessed to control prosthetic limbs or other assistive devices. This EMG hand will be tailored to Kaeden's unique needs, enabling them to regain dexterity and independence.
+Kaeden Olson is the inspiration behind Project OLSN, and this project aims to create a specialized EMG hand that will greatly improve Kaeden's quality of life. Electromyography (EMG) technology allows for the measurement of electrical activity in the muscles, which can be harnessed to control prosthetic limbs or other assistive devices. This EMG hand will be tailored to Kaeden's unique needs, enabling them to regain dexterity and independence.
 
 The primary objectives of this project are as follows:
 - Design and build a functional EMG hand that can be controlled by the user's muscle signals.
 - Customize the hand to match Kaeden's physical and functional requirements.
-- Provide a user-friendly interface for easy control and calibration.
 - Continuously improve and refine the design and functionality based on feedback and advancements in technology.
 
 ## Key Features
