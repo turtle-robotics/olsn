@@ -9,6 +9,48 @@ Welcome to the Project OLSN repository! This project is dedicated to the develop
 - [Getting Started](#getting-started)
 - [Contributing](#contributing)
 - [License](#license)
+  
+## Current Team Members
+
+- **Zachary Bucknor-Smartt**
+  - Major: Mechanical Engineering
+  - Role: Project Lead, Hardware & Software
+  - Year: Junior
+
+- **Willem Bannick**
+  - Major: Mechanical Engineering
+  - Role: Hardware Design Team
+  - Year: Junior
+
+- **Zachary Bucknor-Smartt**
+  - Major: Mechanical Engineering
+  - Role: Hardware Design Team
+  - Year: Senior
+
+- **Ian Farrar**
+  - Major: Electrical Engineering
+  - Role: Electronics & Software Team
+  - Year: Junior
+
+- **Gael Mamenta**
+  - Major: Biomedical Engineering
+  - Role: Hardware Design Team
+  - Year: Sophomore
+
+- **Sky McDaniel**
+  - Major: Electrical Engineering
+  - Role: Electronics & Software Team
+  - Year: Junior
+
+- **Will McGarity**
+  - Major: Manufacturing and Mechanical Engineering Tech
+  - Role: Hardware Design Team
+  - Year: Sophomore
+
+- **Thomas Dawson**
+  - Major: Electrical Engineering
+  - Role: Electronics & Software Team
+  - Year: Senior
 
 ## Project Overview
 
