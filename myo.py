@@ -3,7 +3,7 @@
 import multiprocessing
 from pyomyo import Myo, emg_mode
 import csv
-
+from serial.tools.list_ports import comports
 
 worker_q = multiprocessing.Queue()
 csv_q = multiprocessing.Queue()
