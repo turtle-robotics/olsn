@@ -1,4 +1,4 @@
-# Project OLSN - EMG Hand for Kaeden OLSN
+# Project OLSN - EMG Hand for Kaeden Olson
 
 Welcome to the Project OLSN repository! This project is dedicated to the development of an Electromyography (EMG) hand designed specifically for Kaeden Olson, a young boy born without his right hand. In this README, we will provide you with an overview of the project, its goals, features, and how to get started with it.
 
