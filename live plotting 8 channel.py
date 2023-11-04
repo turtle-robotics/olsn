@@ -1,63 +1,38 @@
-# import random
-# from bokeh.driving import count
-# from bokeh.models import ColumnDataSource
-# from bokeh.plotting import curdoc, figure
+import pyqtgraph as pg
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QTimer
+import numpy as np
 
-# update_interval = 100
-# roll_over = 1000
+# Create an array of 1x8 vectors (simulated data for demonstration)
+n = 100  # Number of vectors
+vectors = [np.random.rand(8) for _ in range(n)]
 
-# source = ColumnDataSource({'x':[], 'y':[]})
+# Create a PyQtGraph application
+app = QApplication([])
 
-# @count()
-# def update(x):
-#     y = random.random()
-#     source.Stream({'x':[], 'y':[]}, rollover=roll_over)
+# Create a PyQtGraph plot window
+win = pg.GraphicsLayoutWidget(show=True)
+win.setWindowTitle('Live Vector Plot')
 
-# plot = figure()
-# plot.line('x', 'y', source = source)
-# plot.xaxis.axis_label = 'x'
-# plot.yaxis.axis_label = 'y'
+# Create a list to store PlotItem objects for each vector
+plots = []
 
-# doc = curdoc()
-# doc.add_root(plot)
-# doc.add_periodic_callback(update, update_interval)
-import sys
-from math import sin
-from threading import Thread
-from time import sleep
+# Initialize the plots with the initial data
+plot = '1'
+for vector in vectors:
+    plot = win.addPlot(title=f"Vector Plot {plot}")
+    curve = plot.plot(vector, pen='g')
+    plots.append({'plot': plot, 'curve': curve})
 
-from PyQt6.QtWidgets import QApplication
+# Function to update the plots with new data
+def update_plots():
+    for i, vector in enumerate(vectors):
+        plots[i]['curve'].setData(vector)
 
-from pglive.sources.data_connector import DataConnector
-from pglive.sources.live_plot import LiveLinePlot
-from pglive.sources.live_plot_widget import LivePlotWidget
+# Create a QTimer to periodically update the plots (e.g., every 100 ms)
+timer = QTimer()
+timer.timeout.connect(update_plots)
+timer.start(100)
 
-"""
-Line plot is displayed in this example.
-"""
-app = QApplication(sys.argv)
-running = True
-
-plot_widget = LivePlotWidget(title="Line Plot @ 100Hz")
-plot_curve = LiveLinePlot()
-plot_widget.addItem(plot_curve)
-# DataConnector holding 600 points and plots @ 100Hz
-data_connector = DataConnector(plot_curve, max_points=600, update_rate=100)
-
-
-def sin_wave_generator(connector):
-    """Sine wave generator"""
-    x = 0
-    while running:
-        x += 1
-        data_point = sin(x * 0.01)
-        # Callback to plot new data point
-        connector.cb_append_data_point(data_point, x)
-
-        sleep(0.01)
-
-
-plot_widget.show()
-Thread(target=sin_wave_generator, args=(data_connector,)).start()
-app.exec()
-running = False
+# Start the PyQtGraph application event loop
+app.exec_()
