@@ -47,3 +47,5 @@ timer.start(time_between_updates)
 
 # Start the PyQtGraph application event loop
 app.exec_()
+print('test commit')
+
