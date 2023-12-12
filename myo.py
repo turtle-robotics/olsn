@@ -5,7 +5,6 @@ from pyomyo import Myo, emg_mode
 import csv
 import time
 
-#yipeeee
 worker_q = multiprocessing.Queue()
 csv_q = multiprocessing.Queue()
 graph_q = multiprocessing.Queue()
