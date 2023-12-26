@@ -29,8 +29,7 @@ data_count = 1
 
 async def function(interface):
     global df
-    await interface.stream_raw_emg(action=lambda x: print())
-    df = df.append(interface.emg_data_stream[:][-1])
+    await interface.stream_raw_emg(action=lambda x: print(1))
 
 
 interface = MyoInterface.MyoInterface()
@@ -71,16 +70,31 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
         time.sleep(1)
         print('waiting for connection')
 
+    #err_detect = executor.submit(interface.set_sleep_mode, SleepModes.never_sleep)
+    #interface.set_sleep_mode(SleepModes.normal)
+
 
     def update_plots():
         global data_count
+        while not hasattr(interface, 'client'):
+            time.sleep(1)
+            print('waiting for connection')
         if hasattr(interface, 'client'):
             for i in range(8):
                 sensor_vectors[i] = np.roll(sensor_vectors[i], -1)  # shift data to the left
                 sensor_vectors[i][-1] = interface.emg_data_stream[i][-1]  # add new data point to end
                 plots[i]['curve'].setData(sensor_vectors[i])  # update plot
-            print("DC: ", data_count)
-            data_count += 1
+
+            data = np.array(interface.emg_data_stream).T.tolist() #transpose data (switch columns with rows)
+            np.savetxt("data.csv",
+                       data,
+                       delimiter = ", ",
+                       fmt = '% d')
+            # print(interface.emg_data_stream)
+            # print(len(interface.emg_data_stream))
+            # print(type(interface.emg_data_stream))
+            # print(len(interface.emg_data_stream))
+            # print(len(interface.emg_data_stream[2]))
 
             # commented out from original library code; keeping in case useful to better understand library function later
             # for i in range(8):
