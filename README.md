@@ -52,6 +52,26 @@ Welcome to the Project OLSN repository! This project is dedicated to the develop
   - Role: Electronics & Software Team
   - Year: Senior
 
+- **[Dharmik Patel](https://www.linkedin.com/in/dharmik-patel-3b80a1245/)**
+  - Major: Computer Engineering
+  - Role: Electronics & Software Team
+  - Year: Sophomore
+ 
+- **[Landry Graves](https://www.linkedin.com/in/landry-graves-746657214/)**
+  - Major: Mechanical Engineering
+  - Role: Hardware Design Team
+  - Year: Junior
+
+- **[Daniel Fernandez]()**
+  - Major: Mechanical Engineering
+  - Role: Hardware Design Team
+  - Year: Junior
+
+- **[Lex Landreneau]()**
+  - Major: Biomedical Engineering
+  - Role: Hardware Design Team
+  - Year: Junior
+  
 ## Project Overview
 
 Kaeden Olson is the inspiration behind Project OLSN, and this project aims to create a specialized EMG hand that will greatly improve Kaeden's quality of life. Electromyography (EMG) technology allows for the measurement of electrical activity in the muscles, which can be harnessed to control prosthetic limbs or other assistive devices. This EMG hand will be tailored to Kaeden's unique needs, enabling them to regain dexterity and independence.
