@@ -13,7 +13,7 @@ Welcome to the Project OLSN repository! This project is dedicated to the develop
 ## Current Team Members
 
 - **[Zachary Bucknor-Smartt](https://www.linkedin.com/in/zacharybsmartt/)**
-  - Major: Mechanical Engineering
+  - Major: Mechanical Engineering Minors: Mathematics, Computer Science
   - Role: Project Lead, Hardware & Software
   - Year: Junior
 
@@ -28,7 +28,7 @@ Welcome to the Project OLSN repository! This project is dedicated to the develop
   - Year: Senior
 
 - **[Ian Farrar](https://www.linkedin.com/in/ian-farrar-479218233/)**
-  - Major: Electrical Engineering
+  - Major: Electrical Engineering, Minors: Computer Science
   - Role: Electronics & Software Team
   - Year: Junior
 
@@ -41,7 +41,12 @@ Welcome to the Project OLSN repository! This project is dedicated to the develop
   - Major: Electrical Engineering
   - Role: Electronics & Software Team
   - Year: Junior
-
+  
+- **[Salina Teng](https://www.linkedin.com/in/salinateng202619/)**
+  - Major: Electrical Engineering, Minors: Computer Science
+  - Role: Electronics & Software Team
+  - Year: Junior
+  
 - **[William McGarity](https://www.linkedin.com/in/william-mcgarity-978b7826a/)**
   - Major: Manufacturing and Mechanical Engineering Tech
   - Role: Hardware Design Team
