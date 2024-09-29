@@ -11,8 +11,9 @@ df = pd.read_csv(training_data_path)
 train_df = df.sample(frac = 0.8)
 test_df = df.drop(train_df.index)
 
+# does this need to be changed?
 train_df.size / 9 #number of elements split into training
-test_df.size / 9#number of elements split into testing
+test_df.size / 9 #number of elements split into testing
 (train_df.size / 9) + (test_df.size / 9) #total number of elements
 
 train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(train_df, label="Class")
