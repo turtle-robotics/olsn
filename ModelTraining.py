@@ -10,21 +10,21 @@ from imblearn.under_sampling import RandomUnderSampler
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-training_data_path = '/home/zachary/Downloads/TURTLE/OLSN/olsn/Compiled and Labelled - Sheet1.csv'  # Change this path
+training_data_path = '/home/zachary/Downloads/TURTLE/OLSN/olsn/Compiled and Labelled - Sheet1.csv'  # Change this path to wherever you keep your data
 df = pd.read_csv(training_data_path)
-df = df.dropna() # drops all missing values in the data
+df = df.dropna() # drops all N/A data in the set (if there is any)
 
 # Feature Selection
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42, stratify=df['Class'])
 train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(train_df, label="Class")
-test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(test_df, label="Class")
+test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(test_df, label="Class") 
 
 initial_model = tfdf.keras.RandomForestModel()
 initial_model.fit(train_ds)
 feature_importances = initial_model.make_inspector().variable_importances()
 
 
-# Re-split the data
+# Re-split the data and take into account feature under representation
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42, stratify=df['Class'])
 
 X = train_df.drop('Class', axis=1)
@@ -37,7 +37,7 @@ train_df = pd.concat([pd.DataFrame(X_resampled, columns=X.columns), pd.Series(y_
 train_ds = tfdf.keras.pd_dataframe_to_tf_dataset(train_df, label="Class")
 test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(test_df, label="Class")
 
-
+# pretty much guessed on these, still a place where optimization can occur but with a 99.95% success rate I think we are good, will test on other data
 param_grid = {
     "num_trees": [50, 100, 200],
     "max_depth": [10, 20, None],
@@ -73,17 +73,17 @@ for params in ParameterGrid(param_grid):
 
 print(f"Best Params: {best_params}, Best CV Accuracy: {best_score}")
 
-# 3. Train Final Model with Best Hyperparameters
+# Train Final Model with Best Hyperparameters
 final_model = tfdf.keras.RandomForestModel(**best_params)
 final_model.fit(train_ds)
 
-# 4. Evaluate the Model
+# Evaluate the Model
 evaluation = final_model.evaluate(test_ds, return_dict=True)
 print("Final Model Evaluation Metrics:")
 for metric, value in evaluation.items():
     print(f"{metric}: {value}")
 
-# 5. Confusion Matrix
+# Confusion Matrix
 true_labels = test_df['Class'].values
 predictions = final_model.predict(test_ds)
 pred_labels = np.array([pred["predictions"][0].decode("utf-8") for pred in predictions])
@@ -94,11 +94,10 @@ disp.plot(cmap=plt.cm.Blues)
 plt.title("Confusion Matrix")
 plt.show()
 
-# 6. Save the Final Model
+
 model_save_path = '/home/zachary/Downloads/TURTLE/OLSN/olsn/random_forest_model'
 final_model.save(model_save_path)
 
-# 7. Deploy to Hardware using scikit-learn and Everywhereml
 # Train scikit-learn RandomForestClassifier
 X_train = train_df.drop('Class', axis=1).values
 y_train = train_df['Class'].values
