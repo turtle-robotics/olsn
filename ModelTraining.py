@@ -40,7 +40,7 @@ test_ds = tfdf.keras.pd_dataframe_to_tf_dataset(test_df, label="Class")
 # pretty much guessed on these, still a place where optimization can occur but with a 99.95% success rate I think we are good, will test on other data
 param_grid = {
     "num_trees": [50, 100, 200],
-    "max_depth": [10, 20, None],
+    "max_depth": [5, 10, None],
     "min_examples": [2, 5, 10],
     "split_strategy": ["AUTO", "BEST"]
 }
