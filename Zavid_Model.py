@@ -1,68 +1,75 @@
-import numpy as np
-import tensorflow as tf
-import tensorflow_decision_forests as tfdf
+"""
+import numpy as np 
+import tensorflow as tf # currently unused
 import pandas as pd
-import ydf
+import pickle
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 
+import tensorflow_decision_forests as tfdf # currently unused
+import ydf # currently unused
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
 
+# Load the dataset
 training_data_path = 'Compiled and Labelled - Sheet1.csv'  # Change this path to wherever you keep your data
 ds = pd.read_csv(training_data_path)
-batch_size = 12
+train_ds = ds.sample(frac = .75)
+test_ds = ds.drop(train_ds.index)
 
-df = pd.DataFrame({
-                   "feature_1" : ds['channel 1'], 
-                   "feature_2" : ds['channel 2'], 
-                   "feature_3" : ds['channel 3'], 
-                   "feature_4" : ds['channel 4'], 
-                   "feature_5" : ds['channel 5'],
-                   "feature_6" : ds['channel 6'], 
-                   "feature_7" : ds['channel 7'], 
-                   "feature_8" : ds['channel 8'], 
-                   "class"     : ds['Class']
-                   })
+print(train_ds)
+print(test_ds)
 
+# Create and train the model
+model = RandomForestClassifier(n_estimators=10, max_depth=10)
+model.fit(train_ds)
 
-features = df[["feature_1", "feature_2", "feature_3", "feature_4", "feature_5", "feature_6", "feature_7", "feature_8"]]
-labels = df["class"]
-# Split the data into training and testing sets
-train_size = int(0.75 * len(df))
-train_features = features[:train_size]
-train_labels = labels[:train_size]
-test_features = features[train_size:]
-test_labels = labels[train_size:]
+model.evaluate()
 
-# Convert to TensorFlow datasets
-train_ds = (tf.data.Dataset.from_tensor_slices((dict(train_features), train_labels)).batch(batch_size))
-test_ds = (tf.data.Dataset.from_tensor_slices((dict(test_features), test_labels)).batch(batch_size))
-
-model = ydf.RandomForestLearner(label="class").train(train_ds)
-
-analysis = model.analyze(test_ds)
-print(analysis)
+# Make predictions and evaluate
+y_pred = model.predict(test_ds)
 
 
-# df = pd.DataFrame({'channel 1': [0], 
-#                    'channel 2': [1], 
-#                    'channel 3': [2], 
-#                    'channel 4': [3], 
-#                    'channel 5': [4],
-#                    'channel 6': [5], 
-#                    'channel 7': [6], 
-#                    'channel 8': [7], 
-#                    'Class': [8]})
-# print(df.head)
-# dataset = tf.data.Dataset.from_tensor_slices((df[['feature1', 'feature2']].values, df['label'].values))
+filename = 'model.pkl'
+pickle.dump(model, open(filename, 'wb'))
+"""
+
+import numpy as np 
+import pandas as pd
+import pickle, sys
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+from sklearn.model_selection import cross_val_score
+
+# Load the dataset
+training_data_path = 'Compiled and Labelled - Sheet1.csv'  # Path to the data file
+ds = pd.read_csv(training_data_path)
 
 
-# # Evaluate a model (e.g. roc, accuracy, confusion matrix, confidence intervals)
-# model.evaluate(test_ds)
+X = ds[["channel 1", "channel 2", "channel 3", "channel 4", 
+        "channel 5", "channel 6", "channel 7", "channel 8"]]
+y = ds["Class"]
+# print(y)
 
-# # Generate predictions
-# model.predict(test_ds)
+# Further split into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
-# # Analyse a model (e.g. partial dependence plot, variable importance)
+# Find duplicate rows in training and test sets
+duplicates_in_train_test = pd.merge(X_train, X_test, how='inner')
+print("Number of duplicate samples between train and test:", len(duplicates_in_train_test))
 
-# # Benchmark the inference speed of a model
-# model.benchmark(test_ds)
 
-# model.describe()
+model = RandomForestClassifier(n_estimators=10, max_depth=10)
+model.fit(X_train, y_train)
+
+cv_scores = cross_val_score(model, X_train, y_train, cv=5) # cross validate
+print("Cross-validation scores:", cv_scores)
+print("Mean cross-validation score:", cv_scores.mean())
+
+y_pred = model.predict(X_test)
+print("Test accuracy of the model:", metrics.accuracy_score(y_test, y_pred))
+
+
+filename = 'model.pkl' # save model
+pickle.dump(model, open(filename, 'wb'))

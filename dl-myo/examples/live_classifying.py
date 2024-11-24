@@ -24,9 +24,13 @@ import pandas as pd
 import numpy as np
 import ydf
 from scipy import stats
-
+import pickle
 global model
-model = ydf.load_model("model_03_21_2024") #load RDF model
+
+
+filename = 'model.pkl'
+model = pickle.load(open(filename, 'rb'))
+# model = ydf.load_model("model_03_21_2024") #load RDF model
 
 
 global df
