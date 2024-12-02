@@ -1,267 +1,217 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import argparse
-import asyncio
-import logging
-import serial
-import time
-
-from myo import AggregatedData, MyoClient
-from myo.types import (
-   ClassifierEvent,
-   ClassifierMode,
-   EMGData,
-   EMGMode,
-   FVData,
-   IMUData,
-   IMUMode,
-   MotionEvent,
-   VibrationType,
-)
-from myo.constants import RGB_PINK
+import argparse, asyncio, logging, pickle, time
 import pandas as pd
 import numpy as np
-import ydf
-from scipy import stats
-import pickle
-global model
+from collections import Counter
+from threading import Thread
+import tkinter as tk
+from tkinter import ttk
+from PIL import Image, ImageTk
+from myo import AggregatedData, MyoClient
+from myo.types import (
+    ClassifierMode,
+    EMGMode,
+    IMUMode,
+    VibrationType,
+)
+from myo.constants import RGB_PINK
 
-
-filename = 'model.pkl'
+# Load the model
+filename = 'dl-myo/examples/rf_model.pkl'
 model = pickle.load(open(filename, 'rb'))
-# model = ydf.load_model("model_03_21_2024") #load RDF model
+
+# Initialize variables for prediction aggregation
+prediction_buffer = []
+start_time = time.time()
+
+# Dataframe for incoming data
+df = pd.DataFrame(columns=[
+    'channel 1', 'channel 2', 'channel 3', 'channel 4',
+    'channel 5', 'channel 6', 'channel 7', 'channel 8'
+])
+
+# Gesture-to-Image Mapping
+gesture_images = {
+    "Fist": "dl-myo/examples/fist.png",           # Replace with your fist image file path
+    "Rest": "dl-myo/examples/rest.png",           # Replace with your rest image file path
+    "One-Finger-Pinch": "dl-myo/examples/one_finger_pinch.png",  # Replace with your pinch image file path
+    "Two-Finger-Pinch": "dl-myo/examples/two_finger_pinch.png",  # Replace with your pinch image file path
+    "Extension": "dl-myo/examples/extension.png",  # Replace with your extension image file path
+}
+
+# Initialize the GUI
+gesture_label = None
+gesture_image_label = None
 
 
-global df
-global classification_arr
-classification_arr = np.zeros(25) #keeps array of 25 latest classifications. Mode of array is final output. Helps
-                                  #filter out misclassifications.
+def run_gui():
+    """Runs the enhanced GUI in a separate thread."""
+    global gesture_label, gesture_image_label
 
-df = pd.DataFrame(columns=['channel 1', 'channel 2', 'channel 3', 'channel 4', 'channel 5', 'channel 6', 'channel 7',
-                           'channel 8', 'channel 9', 'channel 10', 'channel 11', 'channel 12', 'channel 13', 'channel 14', 'channel 15',
-                           'channel 16','channel 17','channel 18'])
+    # Create the main window
+    root = tk.Tk()
+    root.title("Texas A&M | MEEN 423 | Project 2")
+    root.geometry("900x700")
+    root.configure(bg="#500000")  # Texas A&M maroon color
 
-arduino = serial.Serial(port='COM16',   baudrate=115200, timeout=0.1,write_timeout = 0.0)
+    # Title label
+    title_label = tk.Label(
+        root,
+        text="Real-Time Gesture Recognition for Dynamic Prosthetic Devices",
+        font=("Helvetica", 16, "bold"),
+        fg="white",
+        bg="#500000",
+        wraplength=850,
+    )
+    title_label.pack(pady=10)
+
+    # Prediction Display (Main Focus)
+    prediction_frame = tk.Frame(root, bg="#500000")
+    prediction_frame.pack(pady=20)
+
+    prediction_label = tk.Label(
+        prediction_frame,
+        text="Prediction:",
+        font=("Helvetica", 28, "bold"),
+        fg="white",
+        bg="#500000",
+    )
+    prediction_label.grid(row=0, column=0, padx=10)
+
+    gesture_label = tk.Label(
+        prediction_frame,
+        text="Waiting...",
+        font=("Helvetica", 48, "bold"),
+        fg="#FFD700",  # Gold
+        bg="#500000",
+    )
+    gesture_label.grid(row=0, column=1, padx=10)
+
+    # Image Display (Centralized)
+    gesture_image_label = tk.Label(root, bg="#500000")
+    gesture_image_label.pack(pady=40)
+
+    # Footer Frame for Logo and Text
+    footer_frame = tk.Frame(root, bg="#500000")
+    footer_frame.pack(side="bottom", pady=10)
+
+    footer_label = tk.Label(
+        footer_frame,
+        text="© 2024 Texas A&M University | All Rights Reserved",
+        font=("Helvetica", 10, "italic"),
+        fg="white",
+        bg="#500000",
+    )
+    footer_label.grid(row=0, column=0, padx=5)
+
+    # Minimal MEEN Stack Logo
+    logo_path = "dl-myo/examples/MEEN_stack.png"
+    try:
+        logo = Image.open(logo_path)
+        logo = logo.resize((80, 80))  # Resize logo to be minimal
+        logo_tk = ImageTk.PhotoImage(logo)
+        logo_label = tk.Label(footer_frame, image=logo_tk, bg="#500000")
+        logo_label.image = logo_tk  # Keep a reference to avoid garbage collection
+        logo_label.grid(row=0, column=1, padx=5)
+    except Exception as e:
+        logging.warning(f"Unable to load logo image: {e}")
+
+    root.mainloop()
+
+
+def update_gesture_image(prediction):
+    """Update the gesture image based on the prediction."""
+    global gesture_image_label, gesture_images
+
+    if prediction in gesture_images:
+        try:
+            # Load the image
+            img_path = gesture_images[prediction]
+            img = Image.open(img_path)
+            img = img.resize((300, 300))  # Larger images for central focus
+            img_tk = ImageTk.PhotoImage(img)
+
+            # Update the label
+            gesture_image_label.config(image=img_tk)
+            gesture_image_label.image = img_tk  # Keep a reference to avoid garbage collection
+        except Exception as e:
+            logging.warning(f"Unable to load gesture image: {e}")
 
 
 class SampleClient(MyoClient):
-
-    # global df
-    # df = pd.DataFrame(columns=['channel 1', 'channel 2', 'channel 3', 'channel 4', 'channel 5', 'channel 6', 'channel 7',
-    #                        'channel 8', 'channel 9', 'channel 10', 'channel 11', 'channel 12', 'channel 13', 'channel 14', 'channel 15','channel 16'])
-
-    global i
-    i = 0
-
-    global array
-
-    async def on_classifier_event(self, ce: ClassifierEvent):
-        # logging.info(ce.json())
-        print(1)
-        pass
-
     async def on_aggregated_data(self, ad: AggregatedData):
-        logging.info(ad)
-        global model
-        global df
-        global classification_arr
+        global prediction_buffer, start_time, df, gesture_label
 
+        # Parse incoming data
         string = str(ad)
         array = string.split(',')
         array = np.array(array).reshape(1, 18)
-        df = pd.DataFrame(array,columns=['channel 1', 'channel 2', 'channel 3', 'channel 4', 'channel 5', 'channel 6', 'channel 7',
-                           'channel 8', 'channel 9', 'channel 10', 'channel 11', 'channel 12', 'channel 13',
-                           'channel 14', 'channel 15',
-                           'channel 16', 'channel 17', 'channel 18'])
-        df = df.iloc[:, : 8]
-        # print(df)
-        prediction = model.predict(df)
-        # maximum = max(prediction)
-        index = prediction.argmax()
-        classification_arr = np.roll(classification_arr,-1)
-        classification_arr[-1] = index
+        df = pd.DataFrame(array, columns=[
+            'channel 1', 'channel 2', 'channel 3', 'channel 4',
+            'channel 5', 'channel 6', 'channel 7', 'channel 8',
+            'channel 9', 'channel 10', 'channel 11', 'channel 12',
+            'channel 13', 'channel 14', 'channel 15', 'channel 16',
+            'channel 17', 'channel 18'
+        ])
+        df = df.iloc[:, :8]  # Keep only the first 8 channels
 
-        # print(prediction)
-        # print(index)
-        # df.plot()
-        # arduino.write(index + 1)
-        if (stats.mode(classification_arr)[0] == 1): #use mode to determine output
-            # arduino.write(str.encode('1'))
-            arduino.write(bytes('1', 'utf-8'))
-            # arduino_print = arduino.readline()
-            # print(arduino_print)
-            print('rest')
-            # print(index)
+        # Make prediction
+        prediction = model.predict(df)[0]
+        prediction_buffer.append(prediction)
 
-        elif (stats.mode(classification_arr)[0] == 0):
-            # arduino.write(str.encode('2'))
-            arduino.write(bytes('2', 'utf-8'))
-            # arduino_print = arduino.readline()
-            # print(arduino_print)
-            print('fist')
-            # print(index)
-        else:
-            # arduino.write(str.encode('3'))
-            arduino.write(bytes('3', 'utf-8'))
-            # arduino_print = arduino.readline()
-            # print(arduino_print)
-            print('pinch')
-            # print(index)
-        # try:
-        #     if(index == 1):
-        #         # arduino.write(str.encode('1'))
-        #         arduino.write(bytes('1','utf-8'))
-        #         # arduino_print = arduino.readline()
-        #         # print(arduino_print)
-        #         print('REST')
-        #     elif(index == 0):
-        #         # arduino.write(str.encode('2'))
-        #         arduino.write(bytes('2', 'utf-8'))
-        #         # arduino_print = arduino.readline()
-        #         # print(arduino_print)
-        #         print('FIST')
-        #     else:
-        #         # arduino.write(str.encode('3'))
-        #         arduino.write(bytes('3', 'utf-8'))
-        #         # arduino_print = arduino.readline()
-        #         # print(arduino_print)/
-        #         print('PINCH')
-        # except:
-        #     waste = 1
-        # print("Probabilities: " + prediction + "\n" + "Max: "+ maximum + "\n" + "Index: " + index + "\n")
+        # Check if 0.25 seconds have passed
+        if time.time() - start_time >= 0.25:
+            # Determine the most frequent prediction
+            most_common_prediction = Counter(prediction_buffer).most_common(1)[0][0]
+            print(f"Prediction: {most_common_prediction}")
+            prediction_buffer = []  # Clear the buffer
+            start_time = time.time()  # Reset the timer
 
-    async def on_emg_data(self, emg: EMGData):
-        # logging.info(emg)
-        print(3)
-        pass
+            # Update GUI with the prediction
+            if gesture_label:
+                gesture_label.config(text=most_common_prediction)
 
-    async def on_fv_data(self, fvd: FVData):
-        # logging.info(fvd.json())
-        print(4)
-        pass
-
-    async def on_imu_data(self, imu: IMUData):
-        # logging.info(imu.json())
-        print(5)
-        pass
-
-    async def on_motion_event(self, me: MotionEvent):
-        # logging.info(me.json())
-        print(6)
+            # Update the gesture image
+            update_gesture_image(most_common_prediction)
 
 
 async def main(args: argparse.Namespace):
-
-    # global df
-    #
-    # df = pd.DataFrame(columns=['channel 1', 'channel 2', 'channel 3', 'channel 4', 'channel 5', 'channel 6', 'channel 7',
-    #                        'channel 8', 'channel 9', 'channel 10', 'channel 11', 'channel 12', 'channel 13', 'channel 14', 'channel 15',
-    #                        'channel 16'])
-
-
     logging.info("scanning for a Myo device...")
-
     sc = await SampleClient.with_device(mac=args.mac, aggregate_all=True)
 
-    # get the available services on the myo device
+    # Get available services on the Myo device
     info = await sc.get_services()
     logging.info(info)
 
-    # setup the MyoClient
+    # Setup the MyoClient
     await sc.setup(
         classifier_mode=ClassifierMode.ENABLED,
-        emg_mode=EMGMode.SEND_FILT,  # for aggregate_all
-        imu_mode=IMUMode.SEND_ALL,  # for aggregate_all
+        emg_mode=EMGMode.SEND_FILT,
+        imu_mode=IMUMode.SEND_ALL,
     )
 
-    # start the indicate/notify
+    # Start the client
     await sc.start()
 
-    # receive notifications for 5 seconds
-    # time = 5.0
-    # await asyncio.sleep(int(time))
+    # Keep the MyoClient running
     await asyncio.Future()
 
-    df.to_csv('g_ian_two_pinch_no_wrist.csv')
-
-
-    # y_1 = df['channel 1'].astype(int).to_numpy()
-    # y_2 = df['channel 2'].astype(int).to_numpy()
-    # y_3 = df['channel 3'].astype(int).to_numpy()
-    # y_4 = df['channel 4'].astype(int).to_numpy()
-    # y_5 = df['channel 5'].astype(int).to_numpy()
-    # y_6 = df['channel 6'].astype(int).to_numpy()
-    # y_7 = df['channel 7'].astype(int).to_numpy()
-    # y_8 = df['channel 8'].astype(int).to_numpy()
-    # print(y_1)
-    # time_plot = np.arange(0,time,time / y_1.size)
-    # plt.figure(facecolor = '#cccccc')
-    #
-    # plt.subplot(4, 2, 1)
-    # plt.plot(time_plot, y_1, color='#cc0000')
-    # plt.title('Channel 1')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='both', nbins=4)
-    # plt.subplot(4, 2, 2)
-    # plt.plot(time_plot, y_2,color = '#ff9900')
-    # plt.title('Channel 2')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='both', nbins=4)
-    # plt.subplot(4, 2, 3)
-    # plt.plot(time_plot, y_3,color = '#cc9900')
-    # plt.title('Channel 3')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='y', nbins=4)
-    # plt.subplot(4, 2, 4)
-    # plt.plot(time_plot, y_4,color = '#cccc00')
-    # plt.title('Channel 4')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='both', nbins=4)
-    # plt.subplot(4, 2, 5)
-    # plt.plot(time_plot, y_5,color = '#009933')
-    # # plt.plot(y_5)
-    # plt.title('Channel 5')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='both', nbins=4)
-    # plt.subplot(4, 2, 6)
-    # plt.plot(time_plot, y_6,color = '#006699')
-    # # plt.plot(y_6)
-    # plt.title('Channel 6')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='both', nbins=4)
-    # plt.subplot(4, 2, 7)
-    # plt.plot(time_plot, y_7,color = '#993366')
-    # # plt.plot(y_7)
-    # plt.title('Channel 7')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='both', nbins=4)
-    # plt.subplot(4, 2, 8)
-    # plt.plot(time_plot, y_8,color = '#660066')
-    # # plt.plot(y_8)
-    # plt.title('Channel 8')
-    # plt.xlabel('Time (s)')
-    # plt.locator_params(axis='both', nbins=4)
-    # plt.tight_layout()
-    # # plt.set_facecolor('black')
-    # # ax = plt.axes()
-
-    # Setting the background color of the plot
-    # using set_facecolor() method
-    # ax.set_facecolor("#1CC4AF")
-    # plt.show()
-
-    # stop the indicate/notify
+    # Stop the client
     await sc.stop()
-
-    logging.info("bye bye!")
+    logging.info("Exiting Myo client.")
     await sc.vibrate(VibrationType.LONG)
     await sc.led(RGB_PINK)
     await sc.disconnect()
 
 
 if __name__ == "__main__":
+    # Start the GUI in a separate thread
+    gui_thread = Thread(target=run_gui, daemon=True)
+    gui_thread.start()
 
+    # Parse arguments for the Myo client
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -276,13 +226,6 @@ if __name__ == "__main__":
         help="the mac address to connect to",
         metavar="<mac-address>",
     )
-    parser.add_argument(
-        "--seconds",
-        default=10,
-        help="seconds to read data",
-        metavar="<seconds>",
-        type=int,
-    )
 
     args = parser.parse_args()
 
@@ -292,4 +235,7 @@ if __name__ == "__main__":
         format="%(asctime)-15s %(name)-8s %(levelname)s: %(message)s",
     )
 
+    # Run the Myo client
     asyncio.run(main(args))
+
+

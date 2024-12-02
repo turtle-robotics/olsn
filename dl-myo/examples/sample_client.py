@@ -54,25 +54,10 @@ class SampleClient(MyoClient):
         array = np.array(array).reshape(1,18)
         print(array)
         try:
-            df = df.append(pd.DataFrame(array, columns=df.columns), ignore_index=False)
-        except:
-            df = pd.DataFrame(array)
-
-        # print(np.size(array))
-        # print(string_thing)
-        # global i, df, array
-
-
-        # if (i == 0):
-        #     array = np.array(ad)
-        # else:
-        #     temp = np.array(ad)
-        #     np.concatenate((array,temp), axis = 0)
-        # print(array)
-        # # self.df[i] = array.tolist()
-        # # df[i] = array.tolist()
-        # i += 1
-        # print(i)
+            new_row = pd.DataFrame(array, columns=df.columns)
+            df = pd.concat([df, new_row], ignore_index=True)
+        except Exception as e:
+            print(f"Error appending data: {e}")
 
 
     async def on_emg_data(self, emg: EMGData):
@@ -96,46 +81,37 @@ class SampleClient(MyoClient):
 
 
 async def main(args: argparse.Namespace):
-
-    # global df
-    #
-    # df = pd.DataFrame(columns=['channel 1', 'channel 2', 'channel 3', 'channel 4', 'channel 5', 'channel 6', 'channel 7',
-    #                        'channel 8', 'channel 9', 'channel 10', 'channel 11', 'channel 12', 'channel 13', 'channel 14', 'channel 15',
-    #                        'channel 16'])
-
-
     logging.info("scanning for a Myo device...")
 
     sc = await SampleClient.with_device(mac=args.mac, aggregate_all=True)
 
-    # get the available services on the myo device
+    # Get the available services on the Myo device
     info = await sc.get_services()
     logging.info(info)
 
-    # setup the MyoClient
+    # Setup the MyoClient
     await sc.setup(
         classifier_mode=ClassifierMode.ENABLED,
         emg_mode=EMGMode.SEND_FILT,  # for aggregate_all
-        imu_mode=IMUMode.SEND_ALL,  # for aggregate_all
+        imu_mode=IMUMode.SEND_ALL,   # for aggregate_all
     )
 
-    # start the indicate/notify
+    # Start the indicate/notify
     await sc.start()
 
-    # receive notifications for 5 seconds
-    await asyncio.sleep(3)
-    # await asyncio.Future()
+    # Receive notifications for the specified duration
+    await asyncio.sleep(args.seconds)
 
-    df.to_csv('file_name4.csv')
+    # Save all collected data to the CSV after collection
+    df.to_csv('zbs_rest.csv', index=False)
 
-    # stop the indicate/notify
+    # Stop the indicate/notify
     await sc.stop()
 
     logging.info("bye bye!")
     await sc.vibrate(VibrationType.LONG)
     await sc.led(RGB_PINK)
     await sc.disconnect()
-
 
 if __name__ == "__main__":
 
@@ -155,7 +131,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--seconds",
-        default=10,
+        default=30,
         help="seconds to read data",
         metavar="<seconds>",
         type=int,
