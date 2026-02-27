@@ -1,0 +1,11 @@
+README.md
+req.txt
+setup.py
+MyoInterface.egg-info/PKG-INFO
+MyoInterface.egg-info/SOURCES.txt
+MyoInterface.egg-info/dependency_links.txt
+MyoInterface.egg-info/top_level.txt
+__pycache__/MyoInterface.cpython-310.pyc
+__pycache__/MyoInterface.cpython-39.pyc
+__pycache__/command_codes.cpython-310.pyc
+__pycache__/plotting_utility.cpython-310.pyc

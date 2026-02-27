@@ -1,0 +1,24 @@
+bleak==0.14.3
+bleak-winrt==1.1.1
+certifi==2022.5.18.1
+cycler @ file:///home/conda/feedstock_root/build_artifacts/cycler_1635519461629/work
+dearpygui==1.6.2
+fonttools @ file:///D:/bld/fonttools_1651018175663/work
+kiwisolver @ file:///D:/bld/kiwisolver_1648854574371/work
+matplotlib @ file:///D:/bld/matplotlib-suite_1651609712471/work
+munkres==1.1.4
+numpy @ file:///D:/bld/numpy_1653325554875/work
+packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1637239678211/work
+Pillow @ file:///D:/bld/pillow_1652815234323/work
+pyaml==21.10.1
+pyparsing @ file:///home/conda/feedstock_root/build_artifacts/pyparsing_1652235407899/work
+PyQt5==5.15.4
+PyQt5-sip @ file:///D:/bld/pyqt-split_1652284087426/work/pyqt_sip
+pyqtgraph==0.12.4
+python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1626286286081/work
+PyYAML==6.0
+sip @ file:///D:/bld/sip_1646101407041/work
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
+toml @ file:///home/conda/feedstock_root/build_artifacts/toml_1604308577558/work
+tornado @ file:///D:/bld/tornado_1648827438424/work
+unicodedata2 @ file:///D:/bld/unicodedata2_1649112137711/work
