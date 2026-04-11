@@ -18,12 +18,12 @@
 // ======================== PIN DEFINITIONS ========================
 
 // Motor A
-const int MOTOR_AIN[2] = {26, 27};   // IN1, IN2 to driver
-const int MOTOR_APWM   = 25;         // PWM to driver
+const int MOTOR_AIN[2] = {35, 32};   // IN1, IN2 to driver
+const int MOTOR_APWM   = 23;         // PWM to driver
 
 // Encoders (Phase A only, one per motor)
-const int ENC_APIN = 33;
-const int ENC_BPIN = 32;
+const int ENC_APIN = 14;
+const int ENC_BPIN = 12;
 
 // ======================== CONSTANTS ========================
 
