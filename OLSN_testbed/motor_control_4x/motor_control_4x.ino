@@ -20,18 +20,18 @@
 
 // Motor driver IN pins [IN1, IN2] per motor
 const int MOTOR_IN[4][2] = {
-  {26, 27},   // Motor A
-  {14, 12},   // Motor B
-  {19, 18},   // Motor C
-  {5,  17},   // Motor D
+  {25, 26},   // Motor A
+  {33, 32},   // Motor B
+  {0, 0},   // Motor C
+  {0, 0},   // Motor D
 };
 
 // PWM pins per motor
-const int MOTOR_PWM[4] = {25, 13, 23, 16};
+const int MOTOR_PWM[4] = {22, 23, 0, 0};
 
 // Encoder Phase-A and Phase-B pins per motor
-const int ENC_A[4] = {33, 35, 22,  4};
-const int ENC_B[4] = {32, 34, 21, 15};
+const DRAM_ATTR int ENC_A[4] = {18, 5, 0,  0};
+const DRAM_ATTR int ENC_B[4] = {19, 17, 0, 0};
 
 // ======================== CONSTANTS ========================
 
@@ -40,11 +40,13 @@ const uint8_t  pwmResolution = 8;       // 8-bit (0–255)
 
 const int   baseDuty[4]  = {150, 150, 150, 150};  // tune per motor if needed
 const float kp           = 1.2f;
+const float kd           = 0.8f;   // derivative gain — increase to damp overshoot more
 const long  TICK_TOL     = 5;
 
 // ======================== MOTOR STATE ========================
 
-volatile long ticks[4]     = {0, 0, 0, 0};
+// DRAM_ATTR ensures the ISR can always access this safely
+volatile DRAM_ATTR long ticks[4] = {0, 0, 0, 0};
          long lastTicks[4] = {0, 0, 0, 0};
          float speed[4]    = {0, 0, 0, 0};   // ticks/s
 
@@ -56,10 +58,13 @@ unsigned long lastSpeedUpdateMs = 0;
 // ======================== ENCODER ISRs ========================
 // One ISR per motor; reads Phase-B at the moment Phase-A rises.
 
-void IRAM_ATTR encISR_A() { ticks[0] += (digitalRead(ENC_B[0]) == HIGH) ? 1 : -1; }
-void IRAM_ATTR encISR_B() { ticks[1] += (digitalRead(ENC_B[1]) == HIGH) ? 1 : -1; }
-void IRAM_ATTR encISR_C() { ticks[2] += (digitalRead(ENC_B[2]) == HIGH) ? 1 : -1; }
-void IRAM_ATTR encISR_D() { ticks[3] += (digitalRead(ENC_B[3]) == HIGH) ? 1 : -1; }
+// Each ISR hardcodes its own Phase-B pin read.
+// Avoid indexing arrays inside IRAM_ATTR — the array pointer lives in flash
+// and can cause a cache miss / crash during flash operations.
+void IRAM_ATTR encISR_A() { ticks[0] += (digitalRead(32) == HIGH) ? 1 : -1; }
+void IRAM_ATTR encISR_B() { ticks[1] += (digitalRead(34) == HIGH) ? 1 : -1; }
+void IRAM_ATTR encISR_C() { ticks[2] += (digitalRead(21) == HIGH) ? 1 : -1; }
+void IRAM_ATTR encISR_D() { ticks[3] += (digitalRead(15) == HIGH) ? 1 : -1; }
 
 void (*encISRs[4])() = {encISR_A, encISR_B, encISR_C, encISR_D};
 
@@ -74,8 +79,9 @@ void motorReverse(int m) {
   digitalWrite(MOTOR_IN[m][1], HIGH);
 }
 void motorStop(int m) {
-  digitalWrite(MOTOR_IN[m][0], LOW);
-  digitalWrite(MOTOR_IN[m][1], LOW);
+  // Active brake: both pins HIGH shorts the motor terminals and resists motion
+  digitalWrite(MOTOR_IN[m][0], HIGH);
+  digitalWrite(MOTOR_IN[m][1], HIGH);
 }
 void motorSetSpeed(int m, int duty) {
   duty = constrain(duty, 0, 255);
@@ -148,8 +154,14 @@ void updatePositionControl(int m) {
     return;
   }
 
-  int duty = (int)(labs(err) * kp);
-  if (duty < 70)  duty = 70;
+  // PD output: proportional pulls toward target, derivative brakes when approaching fast
+  // speed[m] sign: positive = moving in the positive-tick direction
+  float pd = (labs(err) * kp) - (speed[m] * kd);
+
+  // Anti-stall floor only when far from target; close in, let duty go low naturally
+  int duty = (int)pd;
+  if (labs(err) > 50 && duty < 70) duty = 70;
+  if (duty < 0)   duty = 0;
   if (duty > 255) duty = 255;
 
   if (err > 0) { motorForward(m); motorSetSpeed(m, duty); }

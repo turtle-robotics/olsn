@@ -22,8 +22,8 @@ const int MOTOR_AIN[2] = {35, 32};   // IN1, IN2 to driver
 const int MOTOR_APWM   = 23;         // PWM to driver
 
 // Encoders (Phase A only, one per motor)
-const int ENC_APIN = 14;
-const int ENC_BPIN = 12;
+const int ENC_APIN = 17;
+const int ENC_BPIN = 5;
 
 // ======================== CONSTANTS ========================
 
