@@ -1,0 +1,37 @@
+[Channel:Score]
+
+Extension
+0:5
+1:5
+2:3
+3:1
+
+Flexion
+0:1
+1:1
+2:1
+3:5
+
+Radial Deviation
+0:2
+1:4
+2:1
+3:1
+
+Ulnar Deviation
+0:2
+1:2
+2:3
+3:3
+
+Splay
+0:4
+1:4
+2:1
+3:2
+
+Rest
+0:1
+1:1
+2:1
+3:1
